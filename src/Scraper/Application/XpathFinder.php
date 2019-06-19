@@ -35,7 +35,8 @@ class XpathFinder
         foreach ($configs as $config) {
             Log::info("Searching field {$config['name']}.");
             $subcrawler = collect();
-            foreach ($config['xpaths'] as $xpath) {
+            $xpaths = is_array($config['xpaths']) ? $config['xpaths'] : [$config['xpaths']];
+            foreach ($xpaths as $xpath) {
                 Log::debug("Checking xpath {$xpath}");
                 $subcrawler = $crawler->filterXPath($xpath);
 
@@ -47,10 +48,8 @@ class XpathFinder
             }
 
             if (!$subcrawler->count()) {
-                $missingXpath = implode('\', \'', $config['xpaths']);
-                throw new MissingXpathValueException(
-                    "Xpath '{$missingXpath}' for field '{$config['name']}' not found in '{$url}'."
-                );
+                $missingXpath = is_array($config['xpaths']) ? implode('\', \'', $config['xpaths']) : $config['xpaths'];
+                Log::debug("Xpath '{$missingXpath}' for field '{$config['name']}' not found in '{$url}'.");
             }
 
             $result['data'][$config['name']] = $subcrawler->each(function ($node) {
