@@ -81,10 +81,20 @@ class XpathFinder
             return $this->client->request('GET', $url);
         } catch (ConnectException $e) {
             $this->logger->info("Unavailable url '{$url}'", ['message' => $e->getMessage()]);
+            $proxy = explode(':',$this->client->getClient()->getConfig()['proxy']['https']);
+            $db_proxy = \TimRamseyJr\Scraper\Models\Proxies::where('ip',$proxy[0])->where('port',$proxy[1])->first();
+            $db_proxy->rejected_message = $e->getMessage();
+            $db_proxy->rejected_at = \Carbon\Carbon::now();
+            $db_proxy->save();
             throw new \UnexpectedValueException("Unavailable url '{$url}'");
         } catch (RequestException $e) {
             $httpCode = $e->getResponse()->getStatusCode();
             $this->logger->info('Invalid response http status', ['status' => $httpCode]);
+            $proxy = explode(':',$this->client->getClient()->getConfig()['proxy']['https']);
+            $db_proxy = \TimRamseyJr\Scraper\Models\Proxies::where('ip',$proxy[0])->where('port',$proxy[1])->first();
+            $db_proxy->rejected_message = $e->getMessage();
+            $db_proxy->rejected_at = \Carbon\Carbon::now();
+            $db_proxy->save();
             throw new \UnexpectedValueException("Response error from '{$url}' with '{$httpCode}' http code");
         }
     }
