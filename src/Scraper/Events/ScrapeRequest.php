@@ -4,6 +4,7 @@ namespace Softonic\LaravelIntelligentScraper\Scraper\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use TimRamseyJr\Scraper\Models\Proxies;
 
 class ScrapeRequest
 {
@@ -19,16 +20,19 @@ class ScrapeRequest
      */
     public $type;
 
+    public $proxies;
+
     /**
      * Create a new event instance.
      *
      * @param string $url
      * @param string $type
      */
-    public function __construct(string $url, string $type)
+    public function __construct(string $url, string $type, int $proxy_id = null)
     {
         $this->url  = $url;
         $this->type = $type;
+        $this->proxy_id = $proxy_id;
     }
 
     /**

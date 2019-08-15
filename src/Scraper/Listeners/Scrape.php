@@ -3,7 +3,7 @@
 namespace Softonic\LaravelIntelligentScraper\Scraper\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Psr\Log\LoggerInterface;
+use Illuminate\Log\Logger;
 use Softonic\LaravelIntelligentScraper\Scraper\Application\XpathFinder;
 use Softonic\LaravelIntelligentScraper\Scraper\Events\InvalidConfiguration;
 use Softonic\LaravelIntelligentScraper\Scraper\Events\Scraped;
@@ -19,7 +19,7 @@ class Scrape implements ShouldQueue
     private $configuration;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -31,7 +31,7 @@ class Scrape implements ShouldQueue
     public function __construct(
         Configuration $configuration,
         XpathFinder $xpathFinder,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->configuration = $configuration;
         $this->xpathFinder   = $xpathFinder;
