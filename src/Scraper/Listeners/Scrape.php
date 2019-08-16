@@ -44,9 +44,11 @@ class Scrape implements ShouldQueue
             $config = $this->loadConfiguration($scrapeRequest);
             $this->extractData($scrapeRequest, $config);
         } catch (MissingXpathValueException $e) {
-            $this->logger->notice(
-                "Invalid Configuration for '$scrapeRequest->url' and type '$scrapeRequest->type', error: {$e->getMessage()}."
-            );
+            if(config('tld.scaperlogging')) {
+                $this->logger->notice(
+                    "Invalid Configuration for '$scrapeRequest->url' and type '$scrapeRequest->type', error: {$e->getMessage()}."
+                );
+            }
 
             event(new InvalidConfiguration($scrapeRequest));
         }
@@ -59,8 +61,9 @@ class Scrape implements ShouldQueue
      */
     private function loadConfiguration(ScrapeRequest $scrapeRequest)
     {
-        $this->logger->info("Loading scrapping configuration for type '$scrapeRequest->type'");
-
+        if(config('tld.scaperlogging')) {
+            $this->logger->info("Loading scrapping configuration for type '$scrapeRequest->type'");
+        }
         $config = $this->configuration->findByType($scrapeRequest->type);
         if ($config->isEmpty()) {
             throw new MissingXpathValueException('Missing initial configuration');
@@ -75,8 +78,9 @@ class Scrape implements ShouldQueue
      */
     private function extractData(ScrapeRequest $scrapeRequest, $config): void
     {
-        $this->logger->info("Extracting data from $scrapeRequest->url for type '$scrapeRequest->type'");
-
+        if(config('tld.scaperlogging')) {
+            $this->logger->info("Extracting data from $scrapeRequest->url for type '$scrapeRequest->type'");
+        }
         list('data' => $data, 'variant' => $variant) = $this->xpathFinder->extract($scrapeRequest->url, $config);
         event(new Scraped($scrapeRequest, $data, $variant));
     }

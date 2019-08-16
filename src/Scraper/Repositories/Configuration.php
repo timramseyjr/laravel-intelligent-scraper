@@ -35,7 +35,9 @@ class Configuration
         $cacheKey = $this->getCacheKey($type);
         $config   = Cache::get($cacheKey);
         if (!$config) {
-            Log::warning('Calculating configuration');
+            if(config('tld.scaperlogging')) {
+                Log::warning('Calculating configuration');
+            }
             $scrapedDataset = ScrapedDataset::withType($type)->get();
 
             if ($scrapedDataset->isEmpty()) {

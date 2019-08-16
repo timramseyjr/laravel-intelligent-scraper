@@ -61,7 +61,9 @@ class Configurator
         $result        = [];
         $totalDatasets = count($scrapedDataset);
         foreach ($scrapedDataset as $key => $scrapedData) {
-            Log::info("Finding config {$key}/{$totalDatasets}");
+            if(config('tld.scaperlogging')) {
+                Log::info("Finding config {$key}/{$totalDatasets}");
+            }
             if ($crawler = $this->getCrawler($scrapedData)) {
                 $result[] = $this->findConfigByScrapedData($scrapedData, $crawler, $currentConfiguration);
             }
@@ -77,21 +79,26 @@ class Configurator
     private function getCrawler($scrapedData)
     {
         try {
-            Log::info("Request {$scrapedData['url']}");
-
+            if(config('tld.scaperlogging')) {
+                Log::info("Request {$scrapedData['url']}");
+            }
             return $this->client->request('GET', $scrapedData['url']);
         } catch (ConnectException $e) {
-            Log::notice(
-                "Connection error: {$e->getMessage()}",
-                compact('scrapedData')
-            );
+            if(config('tld.scaperlogging')) {
+                Log::notice(
+                    "Connection error: {$e->getMessage()}",
+                    compact('scrapedData')
+                );
+            }
             $scrapedData->delete();
         } catch (RequestException $e) {
             $httpCode = $e->getResponse()->getStatusCode() ?? null;
-            Log::notice(
-                "Response status ({$httpCode}) invalid, so proceeding to delete the scraped data.",
-                compact('scrapedData')
-            );
+            if(config('tld.scaperlogging')) {
+                Log::notice(
+                    "Response status ({$httpCode}) invalid, so proceeding to delete the scraped data.",
+                    compact('scrapedData')
+                );
+            }
             $scrapedData->delete();
         }
     }
@@ -113,21 +120,29 @@ class Configurator
 
         foreach ($scrapedData['data'] as $field => $value) {
             try {
-                Log::info("Searching xpath for field {$field}");
+                if(config('tld.scaperlogging')) {
+                    Log::info("Searching xpath for field {$field}");
+                }
                 $result[$field] = $this->getOldXpath($currentConfiguration, $field, $crawler);
                 if (!$result[$field]) {
-                    Log::debug('Trying to find a new xpath.');
+                    if(config('tld.scaperlogging')) {
+                        Log::debug('Trying to find a new xpath.');
+                    }
                     $result[$field] = $this->xpathBuilder->find(
                         $crawler->getNode(0),
                         $value
                     );
                 }
                 $this->variantGenerator->addConfig($field, $result[$field]);
-                Log::info('Added found xpath to the config');
+                if(config('tld.scaperlogging')) {
+                    Log::info('Added found xpath to the config');
+                }
             } catch (\UnexpectedValueException $e) {
                 $this->variantGenerator->fieldNotFound();
                 $value = is_array($value) ? json_encode($value) : $value;
-                Log::notice("Field '{$field}' with value '{$value}' not found for '{$crawler->getUri()}'.");
+                if(config('tld.scaperlogging')) {
+                    Log::notice("Field '{$field}' with value '{$value}' not found for '{$crawler->getUri()}'.");
+                }
             }
         }
 
@@ -145,18 +160,22 @@ class Configurator
 
     private function getOldXpath($currentConfiguration, $field, $crawler)
     {
-        Log::debug('Checking old Xpaths');
+        if(config('tld.scaperlogging')) {
+            Log::debug('Checking old Xpaths');
+        }
         $config = $currentConfiguration->firstWhere('name', $field);
         foreach ($config['xpaths'] ?? [] as $xpath) {
-            Log::debug("Checking xpath {$xpath}");
+            if(config('tld.scaperlogging')) {
+                Log::debug("Checking xpath {$xpath}");
+            }
             $isFound = $crawler->filterXPath($xpath)->count();
             if ($isFound) {
                 return $xpath;
             }
         }
-
-        Log::debug('Old xpath not found');
-
+        if(config('tld.scaperlogging')) {
+            Log::debug('Old xpath not found');
+        }
         return false;
     }
 

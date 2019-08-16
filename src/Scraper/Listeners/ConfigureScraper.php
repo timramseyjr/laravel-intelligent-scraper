@@ -55,9 +55,11 @@ class ConfigureScraper implements ShouldQueue
             $this->extractData($scrapeRequest, $config);
             $config->map->save();
         } catch (MissingXpathValueException $e) {
-            $this->logger->notice(
-                "Configuration not available for '$scrapeRequest->url' and type '$scrapeRequest->type', error: {$e->getMessage()}."
-            );
+            if(config('tld.scaperlogging')) {
+                $this->logger->notice(
+                    "Configuration not available for '$scrapeRequest->url' and type '$scrapeRequest->type', error: {$e->getMessage()}."
+                );
+            }
             event(new ScrapeFailed($invalidConfiguration->scrapeRequest));
         } catch (\UnexpectedValueException $e) {
             $this->scrapeFailed($invalidConfiguration, $scrapeRequest, $e);
@@ -72,7 +74,9 @@ class ConfigureScraper implements ShouldQueue
      */
     private function extractData(ScrapeRequest $scrapeRequest, $config): void
     {
-        $this->logger->info("Extracting data from $scrapeRequest->url for type '$scrapeRequest->type'");
+        if(config('tld.scaperlogging')) {
+            $this->logger->info("Extracting data from $scrapeRequest->url for type '$scrapeRequest->type'");
+        }
 
         list('data' => $data, 'variant' => $variant) = $this->xpathFinder->extract($scrapeRequest->url, $config);
         event(new Scraped($scrapeRequest, $data, $variant));
@@ -85,10 +89,12 @@ class ConfigureScraper implements ShouldQueue
      */
     private function scrapeFailed(InvalidConfiguration $invalidConfiguration, $scrapeRequest, $e): void
     {
-        $this->logger->error(
-            "Error scraping '{$scrapeRequest->url}'",
-            ['message' => $e->getMessage()]
-        );
+        if(config('tld.scaperlogging')) {
+            $this->logger->error(
+                "Error scraping '{$scrapeRequest->url}'",
+                ['message' => $e->getMessage()]
+            );
+        }
         event(new ScrapeFailed($invalidConfiguration->scrapeRequest));
     }
 }
